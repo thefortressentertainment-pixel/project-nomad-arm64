@@ -53,4 +53,4 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-disk-collector:${{ inputs.version }}
             ghcr.io/${{ github.repository }}-disk-collector:v${{ inputs.version }}
-            ${{ inputs.tag_latest && 'ghcr.io/${{ github.repository }}-disk-collector:latest' || '' }}
+            ${{ inputs.tag_latest && format('ghcr.io/{0}-disk-collector:latest', github.repository) || '' }}
