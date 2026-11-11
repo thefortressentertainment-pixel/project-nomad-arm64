@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "chunk_size_bytes": 1048576,
+  "encoding": "base64",
+  "files": [
+    {
+      "path": "admin/public/creator-packs/crosstalk-solutions.webp",
+      "size": 28206,
+      "sha256": "ecf9263a3b120c9a8da0455c644046b1b5f917952b59576b7358e41a304c8b1c",
+      "chunks": [
+        "001-admin__public__creator-packs__crosstalk-solutions.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/creator-packs/modern-rogue.webp",
+      "size": 45088,
+      "sha256": "1428e4f452aca51c512610f9e96a11c02e53c7a015cd2c9ba210343b6e4091e6",
+      "chunks": [
+        "002-admin__public__creator-packs__modern-rogue.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/creator-packs/project-nomad.webp",
+      "size": 39624,
+      "sha256": "96419522116887a205121ec3f479aa3839657fe53b8c4126abd81a56c9f7b953",
+      "chunks": [
+        "003-admin__public__creator-packs__project-nomad.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/ai-chat.webp",
+      "size": 15512,
+      "sha256": "97d4db34eb8412d6b239f6935c97e50c52fc3b971e038395fcac7bf5973542f0",
+      "chunks": [
+        "004-admin__public__docs__ai-chat.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/benchmark.webp",
+      "size": 23896,
+      "sha256": "942e18e6a682e9c3cde3a41e5a13b048a503424866498da780b19c11850cee4f",
+      "chunks": [
+        "005-admin__public__docs__benchmark.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/content-explorer.webp",
+      "size": 31502,
+      "sha256": "d7a1b143fa72fd3cb2b4770c279b6d9f42812e75a4edd1f2d3c7921f3195ec52",
+      "chunks": [
+        "006-admin__public__docs__content-explorer.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/dashboard.webp",
+      "size": 27320,
+      "sha256": "65e15e3e9e9ccbd784fbb3021657d0bdaef1bb594bf028ae59c6f592f224d284",
+      "chunks": [
+        "007-admin__public__docs__dashboard.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/easy-setup-step1.webp",
+      "size": 40906,
+      "sha256": "7dcb43d73b99106997cc8e24783a5bfabac32315934522288a2278fce9aaef97",
+      "chunks": [
+        "008-admin__public__docs__easy-setup-step1.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/easy-setup-tiers.webp",
+      "size": 45794,
+      "sha256": "f47130b9466db1e31e98a6cc928d92af6a94e574c8a2262f5fde54f83645cab0",
+      "chunks": [
+        "009-admin__public__docs__easy-setup-tiers.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/knowledge-base.webp",
+      "size": 17228,
+      "sha256": "6edf1fc3caf3bd5ef81e95c65f624dadccda9af20f569bd511c65ebf618a3489",
+      "chunks": [
+        "010-admin__public__docs__knowledge-base.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/docs/maps.webp",
+      "size": 33420,
+      "sha256": "d1fc1aa8fc7ba1a444e881ca147b6227104ced33e8c58b793a82b42647158453",
+      "chunks": [
+        "011-admin__public__docs__maps.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/favicon-16x16.png",
+      "size": 693,
+      "sha256": "ed9d286df0537d76c53baadb8f6ff3593f404c9f60c7f740e52d38ed34850c4f",
+      "chunks": [
+        "012-admin__public__favicon-16x16.png.b64"
+      ]
+    },
+    {
+      "path": "admin/public/favicon-180x180.png",
+      "size": 27240,
+      "sha256": "cd08e1ba9ce79de251e8a7321bdbb48fae8eba9b7e9e7e1641d151b748e9a572",
+      "chunks": [
+        "013-admin__public__favicon-180x180.png.b64"
+      ]
+    },
+    {
+      "path": "admin/public/favicon-192x192.png",
+      "size": 30973,
+      "sha256": "1d03cc611b5ea1e42976a063227f420401dfebe8491d87fb695d3929b7999e09",
+      "chunks": [
+        "014-admin__public__favicon-192x192.png.b64"
+      ]
+    },
+    {
+      "path": "admin/public/favicon-32x32.png",
+      "size": 1584,
+      "sha256": "19d857f3bbbe79168deb57fd0828a0bfe8f6f99b63ac82e7847b5343dcc96897",
+      "chunks": [
+        "015-admin__public__favicon-32x32.png.b64"
+      ]
+    },
+    {
+      "path": "admin/public/favicon-512x512 - Copy.png",
+      "size": 321579,
+      "sha256": "24e78b0ed41c8bbe5c26973988148e86a3387dfa6ab6715ccc9b6f8f5fdd9688",
+      "chunks": [
+        "016-admin__public__favicon-512x512_-_Copy.png.b64"
+      ]
+    },
+    {
+      "path": "admin/public/favicon-512x512.png",
+      "size": 321579,
+      "sha256": "24e78b0ed41c8bbe5c26973988148e86a3387dfa6ab6715ccc9b6f8f5fdd9688",
+      "chunks": [
+        "017-admin__public__favicon-512x512.png.b64"
+      ]
+    },
+    {
+      "path": "admin/public/powered_by_crosstalk.webp",
+      "size": 4206,
+      "sha256": "18bb66a958188eda1f9863ead3ca0dfdbab45802222efa5b6887c96b1cef9e56",
+      "chunks": [
+        "018-admin__public__powered_by_crosstalk.webp.b64"
+      ]
+    },
+    {
+      "path": "admin/public/rogue-support-banner.webp",
+      "size": 48674,
+      "sha256": "d7d5635c51fb6d90c2c4c6a6e775f0b8950f752f1c6186162b5136ec9b18c1b5",
+      "chunks": [
+        "019-admin__public__rogue-support-banner.webp.b64"
+      ]
+    },
+    {
+      "path": "install/calibre-empty-library/metadata.db",
+      "size": 409600,
+      "sha256": "ad8a3bc3612725ef761a089ccc820a91d6b228117403514837356a0b366b6af3",
+      "chunks": [
+        "020-install__calibre-empty-library__metadata.db.b64"
+      ]
+    },
+    {
+      "path": "install/wikipedia_en_100_mini_2025-06.zim",
+      "size": 4402044,
+      "sha256": "3bed99efbf6676359149f463aa7e05f26123dcf68ddea9c1f2fcb9d1e15ca7c0",
+      "chunks": [
+        "021-install__wikipedia_en_100_mini_2025-06.zim.b64",
+        "022-install__wikipedia_en_100_mini_2025-06.zim.b64",
+        "023-install__wikipedia_en_100_mini_2025-06.zim.b64",
+        "024-install__wikipedia_en_100_mini_2025-06.zim.b64",
+        "025-install__wikipedia_en_100_mini_2025-06.zim.b64"
+      ]
+    },
+    {
+      "path": "install/wikipedia_en_100_mini_2026-01.zim",
+      "size": 4537782,
+      "sha256": "2811724b72fd34a0728c28b7456d3d6866579019fbbe7ffe28528f3450c252db",
+      "chunks": [
+        "026-install__wikipedia_en_100_mini_2026-01.zim.b64",
+        "027-install__wikipedia_en_100_mini_2026-01.zim.b64",
+        "028-install__wikipedia_en_100_mini_2026-01.zim.b64",
+        "029-install__wikipedia_en_100_mini_2026-01.zim.b64",
+        "030-install__wikipedia_en_100_mini_2026-01.zim.b64"
+      ]
+    }
+  ]
+}
