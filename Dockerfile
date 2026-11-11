@@ -105,8 +105,17 @@ COPY admin/docs /app/docs
 COPY README.md /app/README.md
 
 # Empty Calibre library, seeded into storage/books on Calibre-Web install
-# (see DockerService._runPreinstallActions__CalibreWeb)
-COPY install/calibre-empty-library/metadata.db /app/assets/calibre/metadata.db
+# (see DockerService._runPreinstallActions__CalibreWeb).
+# NOTE (arm64-port): the .db is stored in git only as a base64 chunk
+# (binary-blocks/020-...), because the push route used for this fork accepts
+# text only — it is NOT a tracked file on main, so the workflow restores it
+# before building. Run #4 proved the restored file is in the workspace yet
+# the arm64 builder still cannot see it at this COPY, so decode the tracked
+# chunk inside the image instead: the chunk IS in git, so it is definitely
+# in the build context, and the build no longer depends on the restore step
+# for the one file that can fail it. Hash-verified against the manifest.
+COPY binary-blocks/020-install__calibre-empty-library__metadata.db.b64 /tmp/metadata.db.b64
+RUN mkdir -p /app/assets/calibre && base64 -d /tmp/metadata.db.b64 > /app/assets/calibre/metadata.db && echo "ad8a3bc3612725ef761a089ccc820a91d6b228117403514837356a0b366b6af3  /app/assets/calibre/metadata.db" | sha256sum -c - && rm /tmp/metadata.db.b64
 
 # Copy entrypoint script and ensure it's executable
 COPY install/entrypoint.sh /usr/local/bin/entrypoint.sh
