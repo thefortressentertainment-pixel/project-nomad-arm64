@@ -82,3 +82,12 @@ jobs:
         run: |
           gh release edit "v${{ steps.semver.outputs.new_release_version }}" \
             --notes-file admin/docs/release-notes.md.section
+
+      # Future: Send release notes email
+      # - name: Send release notes email
+      #   if: steps.semver.outputs.new_release_published == 'true' && steps.finalize-notes.outputs.has_notes == 'true'
+      #   run: |
+      #     curl -X POST "https://api.projectnomad.us/api/v1/newsletter/release" \
+      #       -H "Authorization: Bearer ${{ secrets.NOMAD_API_KEY }}" \
+      #       -H "Content-Type: application/json" \
+      #       -d "{\"version\": \"${{ steps.semver.outputs.new_release_version }}\", \"body\": $(cat admin/docs/release-notes.md.section | jq -Rs .)}"
