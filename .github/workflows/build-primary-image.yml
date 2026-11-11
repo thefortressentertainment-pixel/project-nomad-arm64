@@ -52,7 +52,7 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}:${{ inputs.version }}
             ghcr.io/${{ github.repository }}:v${{ inputs.version }}
-            ${{ inputs.tag_latest && 'ghcr.io/${{ github.repository }}:latest' || '' }}
+            ${{ inputs.tag_latest && format('ghcr.io/{0}:latest', github.repository) || '' }}
           build-args: |
             VERSION=${{ inputs.version }}
             BUILD_DATE=${{ github.event.workflow_run.created_at }}
