@@ -53,4 +53,4 @@ jobs:
           tags: |
             ghcr.io/${{ github.repository }}-sidecar-updater:${{ inputs.version }}
             ghcr.io/${{ github.repository }}-sidecar-updater:v${{ inputs.version }}
-            ${{ inputs.tag_latest && 'ghcr.io/${{ github.repository }}-sidecar-updater:latest' || '' }}
+            ${{ inputs.tag_latest && format('ghcr.io/{0}-sidecar-updater:latest', github.repository) || '' }}
