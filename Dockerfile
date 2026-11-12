@@ -101,6 +101,12 @@ COPY --from=build /app/build /app
 # /app/public: admin/public/assets is empty in source, so the built frontend
 # assets are preserved.
 COPY admin/public /app/public
+# Fail the build loudly if the static files did not land. Run #7 shipped an
+# image whose /app/public held only assets/ + 2 SVGs, so /docs/dashboard.webp
+# 500'd and every favicon 404'd, and nothing in the build log said so. If
+# this COPY ever silently misses again, the build stops here instead of
+# publishing a broken image.
+RUN test -f /app/public/docs/dashboard.webp && test -f /app/public/favicon-32x32.png && test -f /app/public/favicon-16x16.png && test -f /app/public/favicon-192x192.png && ls /app/public/docs | head -20
 # Generate version.json from the VERSION build-arg so the image tag is the
 # single source of truth (previously copied root package.json, which drifted
 # from the tag when semantic-release did not commit the bump back).
