@@ -95,6 +95,12 @@ ENV CREATOR_PACKS_APP_KEY=$CREATOR_PACKS_APP_KEY
 WORKDIR /app
 COPY --from=production-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app
+# Copy static public files (favicons, docs images, banners, creator packs)
+# that the AdonisJS build does not reliably include in the build output, so
+# the docs images and favicons actually serve. This merges with the built
+# /app/public: admin/public/assets is empty in source, so the built frontend
+# assets are preserved.
+COPY admin/public /app/public
 # Generate version.json from the VERSION build-arg so the image tag is the
 # single source of truth (previously copied root package.json, which drifted
 # from the tag when semantic-release did not commit the bump back).

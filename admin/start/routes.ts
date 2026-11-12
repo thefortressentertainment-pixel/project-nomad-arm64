@@ -137,6 +137,10 @@ router
 
 router
   .group(() => {
+    router.get('/', ({ response }) => {
+      // redirect to /settings/system if accessing root
+      response.redirect('/settings/system')
+    })
     router.get('/system', [SettingsController, 'system'])
     router.on('/apps').redirectToPath('/supply-depot') // superseded by Supply Depot
     router.get('/legal', [SettingsController, 'legal'])
