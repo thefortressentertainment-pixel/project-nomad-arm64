@@ -460,16 +460,23 @@ download_management_compose_file() {
   echo -e "${GREEN}#${RESET} Docker compose file downloaded successfully to $compose_file_path.\\n"
 
   # ARM64 port: point the three NOMAD images (admin, sidecar-updater,
-  # disk-collector) at the source repo's owner. The upstream compose file
-  # names ghcr.io/crosstalk-solutions/..., whose :latest tags are
-  # amd64-only; a fork's CI publishes the same images multi-arch under
-  # the fork owner's GHCR namespace. Third-party catalog images in the
-  # compose file are untouched. GHCR owners are lowercase.
+  # disk-collector) at the source repo's owner and repo name. The upstream
+  # compose file names ghcr.io/crosstalk-solutions/project-nomad...,
+  # whose :latest tags are amd64-only; a fork's CI publishes the same
+  # images multi-arch under ghcr.io/<owner>/<repo-name>, where the repo
+  # name is the fork's own (e.g. project-nomad-arm64, so the images are
+  # project-nomad-arm64, project-nomad-arm64-sidecar-updater and
+  # project-nomad-arm64-disk-collector). Rewriting only the owner kept
+  # the old "project-nomad" names, which do not exist for the fork, so a
+  # fresh install failed at the pull. Third-party catalog images in the
+  # compose file are untouched. GHCR owners and repo names are lowercase.
   local source_owner="${NOMAD_SOURCE_REPO%%/*}"
   source_owner="$(echo "$source_owner" | tr '[:upper:]' '[:lower:]')"
+  local source_repo_name="${NOMAD_SOURCE_REPO##*/}"
+  source_repo_name="$(echo "$source_repo_name" | tr '[:upper:]' '[:lower:]')"
   if [[ "$source_owner" != "crosstalk-solutions" ]]; then
-    echo -e "${YELLOW}#${RESET} Rewriting NOMAD images to ghcr.io/${source_owner}/... (source repo ${NOMAD_SOURCE_REPO}).\\n"
-    sed -i "s|ghcr.io/crosstalk-solutions/project-nomad|ghcr.io/${source_owner}/project-nomad|g" "$compose_file_path"
+    echo -e "${YELLOW}#${RESET} Rewriting NOMAD images to ghcr.io/${source_owner}/${source_repo_name}... (source repo ${NOMAD_SOURCE_REPO}).\\n"
+    sed -i "s|ghcr.io/crosstalk-solutions/project-nomad|ghcr.io/${source_owner}/${source_repo_name}|g" "$compose_file_path"
   fi
 
   local app_key=$(generateRandomPass)

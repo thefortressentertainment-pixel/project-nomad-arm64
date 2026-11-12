@@ -26,6 +26,13 @@ BRANCH="${NOMAD_SOURCE_BRANCH:-main}"
 INSTALLER_URL="https://raw.githubusercontent.com/${REPO}/refs/heads/${BRANCH}/install/install_nomad.sh"
 OWNER="${REPO%%/*}"
 OWNER_LOWER="$(echo "$OWNER" | tr '[:upper:]' '[:lower:]')"
+# The published image is named after the repo itself (e.g. the fork
+# thefortressentertainment-pixel/project-nomad-arm64 publishes
+# ghcr.io/thefortressentertainment-pixel/project-nomad-arm64), not
+# "project-nomad" — checking the wrong name would wrongly report the
+# images as unpublished.
+REPO_NAME="${REPO##*/}"
+REPO_NAME_LOWER="$(echo "$REPO_NAME" | tr '[:upper:]' '[:lower:]')"
 
 say()  { echo "==> $*"; }
 warn() { echo "!!  $*" >&2; }
@@ -71,9 +78,9 @@ fi
 
 say "Checking that the Project NOMAD images are ready to download..."
 ghcr_ok="unknown"
-if token="$(curl -fsSL --max-time 20 "https://ghcr.io/token?scope=repository:${OWNER_LOWER}/project-nomad:pull" 2>/dev/null | sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"; then
+if token="$(curl -fsSL --max-time 20 "https://ghcr.io/token?scope=repository:${OWNER_LOWER}/${REPO_NAME_LOWER}:pull" 2>/dev/null | sed -n 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')"; then
   if [[ -n "$token" ]]; then
-    if tags="$(curl -fsSL --max-time 20 -H "Authorization: Bearer $token" "https://ghcr.io/v2/${OWNER_LOWER}/project-nomad/tags/list" 2>/dev/null)"; then
+    if tags="$(curl -fsSL --max-time 20 -H "Authorization: Bearer $token" "https://ghcr.io/v2/${OWNER_LOWER}/${REPO_NAME_LOWER}/tags/list" 2>/dev/null)"; then
       if echo "$tags" | grep -q '"latest"'; then
         ghcr_ok="yes"
       else

@@ -41,9 +41,12 @@ perform_update() {
     log "System update initiated"
     sleep 1
 
-    # Apply target image tag to compose.yml before pulling
+    # Apply target image tag to compose.yml before pulling.
+    # The admin image may be named project-nomad (upstream) or
+    # project-nomad-arm64 (this fork) — match either, but not the
+    # sidecar-updater / disk-collector lines, which keep their own tags.
     log "Applying image tag '${target_tag}' to compose.yml..."
-    if sed -i "s|\(image: ghcr\.io/[^/]*/project-nomad\):.*|\1:${target_tag}|" "$COMPOSE_FILE" 2>> "$LOG_FILE"; then
+    if sed -i "s|\(image: ghcr\.io/[^/]*/project-nomad\(-arm64\)\?\):.*|\1:${target_tag}|" "$COMPOSE_FILE" 2>> "$LOG_FILE"; then
         log "Successfully updated compose.yml admin image tag to '${target_tag}'"
     else
         log "ERROR: Failed to update compose.yml image tag"

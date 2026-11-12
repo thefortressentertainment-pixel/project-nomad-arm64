@@ -1435,8 +1435,8 @@ export default function EasySetupWizard(props: {
             {currentStep === 5 && isAiInSetup && renderStep4()}
             {currentStep === 6 && renderStep5()}
 
-            <div className="flex justify-between mt-8 pt-4 border-t border-desert-stone-light">
-              <div className="flex space-x-4 items-center">
+            <div className="flex flex-col gap-4 mt-8 pt-4 border-t border-desert-stone-light sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 {currentStep > 1 && (
                   <StyledButton
                     onClick={handleBack}
@@ -1468,11 +1468,12 @@ export default function EasySetupWizard(props: {
                 </p>
               </div>
 
-              <div className="flex space-x-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                 <StyledButton
                   onClick={() => router.visit('/home')}
                   disabled={isProcessing}
                   variant="outline"
+                  className="w-full sm:w-auto"
                 >
                   Cancel & Go to Home
                 </StyledButton>
@@ -1483,6 +1484,7 @@ export default function EasySetupWizard(props: {
                     disabled={!canProceedToNextStep() || isProcessing}
                     variant="primary"
                     icon="IconChevronRight"
+                    className="w-full sm:w-auto"
                   >
                     Next
                   </StyledButton>
@@ -1493,6 +1495,7 @@ export default function EasySetupWizard(props: {
                     loading={isProcessing}
                     variant="success"
                     icon="IconCheck"
+                    className="w-full sm:w-auto"
                   >
                     Complete Setup
                   </StyledButton>
