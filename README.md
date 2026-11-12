@@ -1,8 +1,8 @@
 <div align="center">
 <img src="admin/public/nomad-primary.svg" width="200" alt="Project NOMAD"/>
 
-# Project NOMAD
-### Knowledge That Never Goes Offline
+# Project NOMAD — ARM64 Port
+### Knowledge That Never Goes Offline — Now On Your Phone
 
 [![Website](https://img.shields.io/badge/Website-projectnomad.us-blue)](https://www.projectnomad.us)
 [![Discord](https://img.shields.io/badge/Discord-Join%20Community-5865F2)](https://discord.com/invite/crosstalksolutions)
@@ -12,30 +12,57 @@
 
 ---
 
-Project NOMAD is a self-contained, offline-first knowledge and education server packed with critical tools, knowledge, and AI to keep you informed and empowered — anytime, anywhere.
+**Project NOMAD is an offline-first knowledge and education server. This is the ARM64 port — it runs NOMAD on ARM computers and Android phones, so you can carry the whole library in your pocket.**
 
-## Installation & Quickstart
-Project NOMAD can be installed on any Debian-based operating system (we recommend Ubuntu 26.04 LTS; 24.04 LTS and Debian 12 are also supported). Installation is completely terminal-based, and all tools and resources are designed to be accessed through the browser, so there's no need for a desktop environment if you'd rather setup NOMAD as a "server" and access it through other clients.
+No internet required after install. Wikipedia, medical references, Khan Academy lessons, offline maps, books, and a local AI helper — all running on hardware you control.
 
-**Before you start:** NOMAD itself needs about **5 GB of disk and under 1 GB of RAM**. The offline content you add afterwards is what actually fills a drive, and the AI Assistant is what drives the memory requirement up. See [Device Requirements](#device-requirements) for both, and the [FAQ](https://www.projectnomad.us/docs/faq) for individual content sizes.
+This is a reverse-engineered ARM64 port of [Crosstalk-Solutions/project-nomad](https://github.com/Crosstalk-Solutions/project-nomad) v1.35.1, which officially supports x86-64 only. Everything below is about this ARM64 version.
 
-*Note: sudo/root privileges are required to run the install script*
+## Install — the easy way
 
-### Quick Install (Debian-based OS Only)
-```bash
-sudo apt-get update && \
-sudo apt-get install -y curl && \
-curl -fsSL https://raw.githubusercontent.com/Crosstalk-Solutions/project-nomad/refs/heads/main/install/install_nomad.sh \
-  -o install_nomad.sh && \
-sudo bash install_nomad.sh
+You do not need to know GitHub, and you do not need to know how to code. You just need to be able to copy and paste one command.
+
+### What you need
+
+- A device running **Debian or Ubuntu Linux on ARM64** — for example a Raspberry Pi, an ARM server, or an Android phone running a Debian virtual machine (see [Installing on a phone](#installing-on-a-phone) below). It also works on regular Intel/AMD computers running Debian or Ubuntu.
+- An internet connection **for the install itself**. After that, NOMAD works offline.
+- About **10 GB of free space**, to be comfortable.
+- A password for your computer — the installer needs administrator access for a few steps and will ask for it.
+
+### The one command
+
+Open a terminal and copy and paste this whole line, then press Enter:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/thefortressentertainment-pixel/project-nomad-arm64/main/install.sh -o /tmp/nomad-arm-install.sh && bash /tmp/nomad-arm-install.sh
 ```
 
-Project NOMAD is now installed on your device! Open a browser and navigate to `http://localhost:8080` (or `http://DEVICE_IP:8080`) to start exploring!
+That downloads a small helper, which checks your machine, checks that the NOMAD images are ready, and then runs the full installer.
 
-For a complete step-by-step walkthrough (including Ubuntu installation), see the [Installation Guide](https://www.projectnomad.us/install). For Windows users, see the [WSL2 install guide](https://www.projectnomad.us/install/wsl2) — community-supported path covering native Docker and Docker Desktop install routes.
+### What happens next
 
-### Advanced Installation
-For more control over the installation process, copy and paste the [Docker Compose template](https://raw.githubusercontent.com/Crosstalk-Solutions/project-nomad/refs/heads/main/install/management_compose.yaml) into a `docker-compose.yml` file and customize it to your liking (be sure to replace any placeholders with your actual values). Then, run `docker compose up -d` to start the Command Center and its dependencies. Note: this method is recommended for advanced users only, as it requires familiarity with Docker and manual configuration before starting.
+1. The helper checks your computer and prints a few lines. If something is wrong (for example, you are not on Debian/Ubuntu), it will tell you plainly and stop.
+2. The installer asks two questions — type `y` and press Enter for each:
+   - **"Are you sure you want to continue?"**
+   - **"I have read and accept the License Agreement?"** (NOMAD is free, open-source software under the Apache License 2.0.)
+3. If Docker is not installed, it installs it. Then it downloads NOMAD and starts it.
+4. This takes a while on a first install — the downloads are large. On a phone it can take a lot longer, so be patient and leave it running.
+
+When it finishes, it prints an address. Open it in your web browser:
+
+```
+http://localhost:8080
+```
+
+That is NOMAD's Command Center. From there you can set it up, add content, and use it. NOMAD starts by itself whenever your machine restarts. If you ever need to start or stop it by hand, the installer leaves helper scripts in `/opt/project-nomad/` called `start_nomad.sh` and `stop_nomad.sh`.
+
+For the full step-by-step version of this guide, including troubleshooting, see [INSTALL-EASY.md](INSTALL-EASY.md).
+
+### Installing on a phone
+
+A phone cannot run NOMAD directly — it needs a small Debian virtual machine running inside the phone first. That takes a bit of setting up, and it is the fiddliest part of the whole thing. The step-by-step instructions for the phone (Termux + QEMU, no root needed) are in **[README-ARM.md](README-ARM.md)**.
+
+Once the Debian virtual machine is running on your phone, open a terminal inside it and run the same one command above. That is the only command you need.
 
 ## How It Works
 NOMAD is a management UI ("Command Center") and API that orchestrates a collection of containerized tools and resources via [Docker](https://www.docker.com/). It handles installation, configuration, and updates for everything — so you don't have to.
@@ -67,42 +94,26 @@ NOMAD also includes built-in tools like a Wikipedia content selector, ZIM librar
 | System Benchmark | Built-in | Hardware scoring, Builder Tags, and community leaderboard |
 | Supply Depot | Built-in | One-click app catalog + bring-your-own custom Docker containers |
 
+## What does not work on ARM
+
+A few things from the regular version do not work on ARM computers:
+
+- **Translate** (the translation service) — it only works on Intel/AMD.
+- **Graphics-card AI** — the AI helper runs on the processor only, which is slower but works.
+- **Excalidraw** — the whiteboard app is Intel/AMD only.
+- Everything else — Wikipedia, lessons, maps, books, files, and the Command Center — works the same.
+
+For the full technical notes on the port (what changed, what was verified, and the Pi/phone runbooks), see **[README-ARM.md](README-ARM.md)**.
+
 ## Device Requirements
-While many similar offline survival computers are designed to be run on bare-minimum, lightweight hardware, Project NOMAD is quite the opposite. To install and run the
-available AI tools, we highly encourage the use of a beefy, GPU-backed device to make the most of your install.
 
-At its core, however, NOMAD is still very lightweight. For a barebones installation of the management application itself, the following minimal specs are required:
+NOMAD itself is lightweight — the base install needs about **5 GB of disk and under 1 GB of RAM**. The offline content you add afterwards is what actually fills a drive, and the AI Assistant is what drives the memory requirement up.
 
-*Note: Project NOMAD is not sponsored by any hardware manufacturer and is designed to be as hardware-agnostic as possible. The hardware listed below is for example/comparison use only*
+- **Minimum:** 2 GHz dual-core processor, 4 GB RAM, 5 GB free disk (plan for 10 GB to install comfortably), Debian-based OS.
+- **For the AI Assistant:** adding Ollama and a model brings the install to roughly **25 GB**. On ARM there is no graphics-card AI, so the AI runs on the processor — use small models and expect it to be slower than on a desktop with a GPU.
+- **On a phone:** an 8 GB RAM phone with about 32 GB free space works well, running NOMAD inside a Debian virtual machine. See [README-ARM.md](README-ARM.md) for the phone setup.
 
-#### Minimum Specs
-- Processor: 2 GHz dual-core processor or better
-- RAM: 4GB system memory (the whole stack without AI runs in under 1 GB)
-- Storage: At least 5 GB free disk space (plan for 10 GB to install comfortably)
-- OS: Debian-based (Ubuntu 26.04 LTS recommended)
-- Stable internet connection (required during install only)
-
-Adding the AI Assistant brings the install to roughly **25 GB**, because Ollama and a general-purpose model are both large, and a model needs about its download size in memory while it answers. That memory comes from VRAM if you have a discrete GPU and from system RAM if you do not, which is the single biggest reason the figures below are so much higher.
-
-To run LLMs and other included AI tools:
-
-#### Optimal Specs
-- Processor: AMD Ryzen 7 or Intel Core i7 or better
-- RAM: 32 GB system memory
-- Graphics: NVIDIA RTX 3060 or AMD equivalent or better (more VRAM = run larger models)
-- Storage: At least 250 GB free disk space (preferably on SSD)
-- OS: Debian-based (Ubuntu 26.04 LTS recommended)
-- Stable internet connection (required during install only)
-
-**For detailed build recommendations at three price points ($150–$1,000+), see the [Hardware Guide](https://www.projectnomad.us/hardware).**
-
-Again, Project NOMAD itself is quite lightweight — it's the tools and resources you choose to install with NOMAD that will determine the specs required for your unique deployment
-
-#### Running AI models on a different host
-By default, NOMAD's installer will attempt to setup Ollama on the host when the AI Assistant is installed. However, if you would like to run the AI model on a different host, you can go to the settings of the AI assistant and input a URL for either an ollama or OpenAI-compatible API server (such as LM Studio).  
-Note that if you use Ollama on a different host, you must start the server with this option: `OLLAMA_HOST=0.0.0.0`.  
-Ollama is the preferred way to use the AI assistant, as it has features such as model download that OpenAI API does not support. So when using LM Studio, for example, you will have to use LM Studio to download models.
-You are responsible for the setup of Ollama/OpenAI server on the other host.
+A stable internet connection is required during install only.
 
 ## Frequently Asked Questions (FAQ)
 For answers to common questions about Project NOMAD, please see our [FAQ](FAQ.md) page.
@@ -122,42 +133,7 @@ By design, Project NOMAD is intended to be open and available without hurdles �
 For now, we recommend using network-level controls to manage access if you're planning to expose your NOMAD instance to other devices on a local network. NOMAD is not designed to be exposed directly to the internet, and we strongly advise against doing so unless you really know what you're doing, have taken appropriate security measures, and understand the risks involved.
 
 ## Contributing
-Contributions are welcome and appreciated! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to the project.
-
-### Testing Auto-Updates (Dry Run)
-
-The Command Center can automatically install **minor/patch** updates of itself during a configurable window, after a cool-off period, and only when pre-flight checks pass (sufficient disk for the new image, no downloads or app installs in progress). Major versions always require a manual update.
-
-Because exercising this logic with real version bumps is impractical, an Ace command runs the **entire decision pipeline without ever triggering an update**. Run it from the `admin/` directory:
-
-```bash
-# 1) Deterministic scenario suite — no network, DB, or Docker required.
-#    Proves every branch (major-only, cool-off, prerelease/draft, window wrap, …)
-#    and exits non-zero on failure, so it's safe to wire into CI.
-node ace auto-update:dry-run --scenarios
-
-# 2) Simulate "what would happen if I were running 1.32.0 right now?"
-#    against the LIVE GitHub releases feed and real pre-flight checks:
-node ace auto-update:dry-run --current=1.32.0 --force-enabled
-
-# 3) Fully offline simulation with a canned release list and a fixed clock:
-node ace auto-update:dry-run --current=1.32.0 --force-enabled \
-  --releases-file=./fixtures/releases.json --now=2026-06-04T21:00:00Z \
-  --window-start=20:00 --window-end=23:00 --cooloff=72 --skip-preflight
-```
-
-It prints the resolved decision — current version, whether the clock is inside the window, the eligible target (if any), and pre-flight blockers — ending in a clear verdict such as `WOULD UPDATE → v1.33.2` or `WOULD NOT UPDATE (outside-window): …`. **No real update is ever requested.**
-
-| Flag | Description |
-|------|-------------|
-| `--scenarios` | Run the built-in deterministic scenario suite and exit |
-| `--current=<version>` | Simulate this currently-running version (e.g. `1.32.0`) |
-| `--force-enabled` | Treat auto-update as enabled, ignoring the saved setting |
-| `--cooloff=<hours>` | Override the cool-off period |
-| `--window-start=<HH:MM>` / `--window-end=<HH:MM>` | Override the update window |
-| `--now=<ISO timestamp>` | Simulate the clock at a specific time |
-| `--releases-file=<path>` | Use a local JSON releases array instead of fetching GitHub (offline) |
-| `--skip-preflight` | Bypass the Docker/disk/queue pre-flight checks |
+Contributions are welcome and appreciated! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to the project. If you run NOMAD on a phone or an ARM board and something doesn't work, opening an issue with your device and what you saw helps everyone.
 
 ## Community & Resources
 
@@ -166,6 +142,7 @@ It prints the resolved decision — current version, whether the clock is inside
 - **Benchmark Leaderboard:** [benchmark.projectnomad.us](https://benchmark.projectnomad.us) - See how your hardware stacks up against other NOMAD builds
 - **FAQ:** [FAQ.md](FAQ.md) - Find answers to frequently asked questions
 - **Community Add-Ons:** [admin/docs/community-add-ons.md](admin/docs/community-add-ons.md) - Third-party content packs built by the community
+- **ARM port technical notes:** [README-ARM.md](README-ARM.md) - What changed for ARM, verification, Pi and phone runbooks
 
 ## License
 
