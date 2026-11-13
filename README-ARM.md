@@ -121,7 +121,9 @@ has built them — upstream's are amd64-only.
    `Build Sidecar Updater Image`. They publish to
    `ghcr.io/<your-user>/project-nomad:latest` (and the two sidecars).
    Make the three packages public in the fork if the VM's Docker
-   pull needs to reach them without credentials.
+   pull needs to reach them without credentials. To publish the
+   content editions (`:lite`, `:standard`, `:comms`, `:full`), also run
+   `Build Variant Docker Images` with the same version.
 3. Then install, pointing the installer at the fork:
 
 ```bash
@@ -138,6 +140,67 @@ Replace `<your-user>` with the fork owner. `sudo -E` matters: plain
 to upstream (it will warn on ARM, but only after downloading).
 The installer still requires Debian, sudo, and Docker — it installs
 Docker itself if missing.
+
+## Content editions (image variants)
+
+The plain `:latest` image ships no offline content — everything is
+downloaded later from inside NOMAD. The variant images bake a ZIM set
+into the image so a fresh install already has a library, with no
+separate download step. The app is identical in every edition; only
+the bundled content differs.
+
+| Tag | Bundled ZIMs | Content | Needs at least |
+|---|---|---|---|
+| `:lite` | `wikipedia_en_100_mini_2026-01.zim` | ~4 MB | 5 GB free |
+| `:standard` | `wikipedia_en_top_mini_2026-06.zim`, `wwwnc.cdc.gov_en_all_2024-11.zim`, `zimgit-medicine_en_2024-08.zim` | ~580 MB | 6 GB free |
+| `:comms` | `wikipedia_en_100_mini_2026-01.zim`, `ham.stackexchange.com_en_all_2026-10.zim` | ~80 MB | 5 GB free |
+| `:full` | All of the above, plus `irp.fas.org_en_military-medicine_2026-10.zim`, `nhs.uk_en_medicines_2025-12.zim` | ~740 MB | 7 GB free |
+
+How it works:
+
+- The `Dockerfile` has one `zim-content` stage that downloads the ZIMs
+  from the same `download.kiwix.org` URLs the Content Manager uses at
+  runtime (see `collections/wikipedia.json` and
+  `collections/kiwix-categories.json`), each SHA256-verified, and one
+  `variant-<name>` stage per edition that copies only its ZIMs into
+  `/app/bundled-zim`. A bare `docker build` still produces the plain
+  image (the final `release` stage is the production image with no
+  bundled ZIMs) — variants are built with
+  `docker build --target variant-<name>`.
+- `/app/storage` is a bind mount at runtime, so ZIMs baked there would
+  be shadowed by the mount. Instead the entrypoint
+  (`install/entrypoint.sh`) copies bundled ZIMs into `/app/storage/zim`
+  on first boot, never overwriting files already there. The admin
+  rebuilds the Kiwix library XML from the ZIMs on disk at boot if it is
+  missing, so seeded files are picked up automatically.
+- The `comms` edition additionally pre-pulls the Meshtastic Web
+  (`ghcr.io/meshtastic/web:2.7.1`) and MeshCore Web
+  (`ghcr.io/axistem-dev/meshcore-web:v1.45.0`) images at install time,
+  so those apps install instantly from the dashboard. The apps
+  themselves are not baked into the admin image — they are separate
+  containers the admin runs on demand.
+- The installer (`install.sh`) asks which edition to install
+  (default `standard`), checks free disk space against the table above,
+  and checks GHCR for that tag before starting. Non-interactive:
+  `NOMAD_VARIANT=full bash install.sh`. The chosen edition is recorded
+  in `/opt/project-nomad/.nomad-variant`.
+- Publish the editions with the **Build Variant Docker Images**
+  workflow (`.github/workflows/build-variants.yml`), which pushes
+  `:<edition>` and `:<version>-<edition>` for all four editions. The
+  plain `:latest` image is built by the existing Build Primary Docker
+  Image workflow and is untouched by the variants workflow.
+
+Notes and limits:
+
+- An edition is an install-time choice. Once the ZIMs are seeded into
+  `/opt/project-nomad/storage/zim` they live in the host storage volume
+  and survive updates. The in-UI updater moves the admin image tag to
+  the latest version tag (its existing behaviour) — that does not remove
+  seeded content, but a later fresh install with `:latest` would not
+  re-seed it; reinstall with the same edition tag to get the bundled
+  content back.
+- The Translate service is not in any edition: it is broken on ARM
+  (amd64-only) and disabled in this port.
 
 ## Running on the phone via a QEMU VM
 

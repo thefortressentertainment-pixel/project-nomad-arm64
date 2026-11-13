@@ -15,7 +15,9 @@ able to copy and paste one command.
   regular Intel/AMD computers running Debian or Ubuntu.
 - An internet connection for the install itself. After that, NOMAD works
   offline.
-- About 10 GB of free space, to be comfortable.
+- About 5 GB of free space for the smallest edition, more for the bigger
+  ones (see "Choose your edition" below). The installer checks this for
+  you and tells you which editions fit.
 - A password for your computer (the installer needs administrator access
   for a few steps, and it will ask for your password).
 
@@ -35,15 +37,36 @@ NOMAD images are ready, and then runs the full installer.
 1. The helper checks your computer and prints a few lines. If something
    is wrong (for example, you are not on Debian/Ubuntu), it will tell you
    plainly and stop.
-2. The installer asks two questions:
+2. The installer asks which edition to install (see below), and checks
+   you have enough free space for it.
+3. The installer asks two questions:
    - **"Are you sure you want to continue?"** — type `y` and press Enter.
    - **"I have read and accept the License Agreement?"** — type `y` and
      press Enter. (NOMAD is free, open-source software under the Apache
      License 2.0.)
-3. If Docker is not installed, it installs it. Then it downloads NOMAD
+4. If Docker is not installed, it installs it. Then it downloads NOMAD
    and starts it.
-4. This takes a while on a first install — the downloads are large. On a
+5. This takes a while on a first install — the downloads are large. On a
    phone it can take a lot longer, so be patient and leave it running.
+
+## Choose your edition
+
+NOMAD comes in editions that differ only in the offline content already
+inside the image. The app itself is identical in every edition, and you
+can always download more content later from inside NOMAD. Pick the one
+that fits your device:
+
+| Edition | What's inside | Needs at least |
+|---|---|---|
+| **standard** (the default) | Wikipedia top articles, CDC health guides, Medical Library — about 580 MB of content | 6 GB free |
+| **lite** | A tiny Wikipedia (100 articles) — about 4 MB of content | 5 GB free |
+| **comms** | Tiny Wikipedia plus Ham Radio questions and answers — about 80 MB; the Meshtastic and MeshCore apps are also downloaded ready, so they install instantly | 5 GB free |
+| **full** | Everything above — about 740 MB of content | 7 GB free |
+| **latest** | The plain image with no content built in (the original install) — you download what you want afterwards | 5 GB free |
+
+If you are not sure, take **standard**. If your phone is short on space,
+take **lite**. If you use mesh radios (Meshtastic or MeshCore), take
+**comms**.
 
 When it finishes, it prints an address. Open it in your web browser:
 
@@ -87,7 +110,10 @@ A few things from the regular version do not work on ARM computers:
   workflows on GitHub first (Build Primary Docker Image, Build Sidecar
   Updater Image, and Build Disk Collector Image), each with a version
   number and "Also tag this image as :latest?" ticked. Then run the
-  installer again.
+  installer again. If you picked an edition other than the plain one
+  (lite, standard, comms, or full), run the **Build Variant Docker
+  Images** workflow instead — that is the one that publishes the
+  editions.
 - **"This installer only works on Debian or Ubuntu"** — you are not on
   a Debian-based system. Install Debian or Ubuntu first (on a phone,
   follow README-ARM.md).

@@ -7,6 +7,29 @@ echo "Starting entrypoint script..."
 # Ensure required storage directories exist (volume may be freshly mounted)
 mkdir -p /app/storage/logs /app/storage/kb_uploads
 
+# Seed bundled ZIM content (image variants): variant images bake ZIM files
+# into /app/bundled-zim at build time. On first boot, copy any that are not
+# already in the storage volume so a fresh install has offline content with
+# no separate download. Never overwrites files already in storage (a user
+# may have a newer version there). The admin rebuilds the Kiwix library XML
+# from the ZIMs on disk at boot if it is missing, so seeded files are picked
+# up automatically. No-op for the plain :latest image (no bundled ZIMs).
+if [ -d /app/bundled-zim ]; then
+  mkdir -p /app/storage/zim
+  for zim in /app/bundled-zim/*.zim; do
+    [ -e "$zim" ] || continue
+    name="$(basename "$zim")"
+    if [ -e "/app/storage/zim/$name" ]; then
+      echo "Bundled ZIM already in storage, skipping: $name"
+    else
+      echo "Seeding bundled ZIM into storage: $name"
+      # Non-fatal: a failed copy (e.g. disk full) must not stop NOMAD from
+      # starting — the content can still be downloaded later from the UI.
+      cp "$zim" "/app/storage/zim/$name" || echo "Warning: could not seed $name (disk full?). It can be downloaded later from the Content Manager." >&2
+    fi
+  done
+fi
+
 # Wait for Redis to be reachable before booting anything that opens a BullMQ
 # connection. `depends_on: condition: service_healthy` only gates a clean
 # `up --recreate`; it is NOT re-checked on `docker compose restart` or a

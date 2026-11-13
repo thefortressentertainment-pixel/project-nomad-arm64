@@ -38,6 +38,52 @@ COPY collections/ /collections/
 RUN npm run gen:curated-data
 RUN node ace build
 
+# --- Bundled ZIM content (image variants) -----------------------------------
+# One stage downloads every ZIM any variant needs, from the same
+# download.kiwix.org URLs the Content Manager uses at runtime (see
+# collections/wikipedia.json and collections/kiwix-categories.json). Each
+# file is SHA256-verified, so a tampered or truncated download fails the
+# build instead of shipping a broken library. Variant stages below COPY
+# only the ZIMs they need out of this stage, so each image carries just
+# its own content set. The 100-mini ZIM is copied from the repo instead
+# (install/wikipedia_en_100_mini_2026-01.zim, restored from binary-blocks),
+# because it is already in the build context.
+# NOTE: downloading all ZIMs in one stage means building any single variant
+# fetches the whole set (~740 MB) once; the layer is cached and shared by
+# every variant build in the same CI job.
+FROM base AS zim-content
+ARG ZIM_TOPMINI_SHA256=2bcb45123f661b26ea6f1b1bf9d6b52caef6d2fb777507a0de3072b0c8df30ee
+ARG ZIM_CDC_SHA256=45c1c8d79a38a814098be41044a42d4ac7cc3dfa5cdfe398e9974e08d80591dc
+ARG ZIM_MEDICINE_SHA256=a86c31b93e9800aae2cd812ef18cbf9c087a7537784c62fbc259db7f9f9d18c0
+ARG ZIM_MILITARY_SHA256=9fc5e5d0302504f57a33e0d3aad9c94761cfd6caab22354ed04b9e9bad2ff57f
+ARG ZIM_NHS_SHA256=7dfa9bffa286e1ed4442536e746109a58d678bc6681af0b9881e07b7ef3dae28
+ARG ZIM_HAM_SHA256=cb8a0cd7ae0078279ace1cd2a05e60505aa2494c29e82dac1942bf4cd54fcf9c
+RUN set -eux; \
+    mkdir -p /zim; \
+    cd /tmp; \
+    curl -fsSL --retry 3 -o wikipedia_en_top_mini_2026-06.zim \
+      "https://download.kiwix.org/zim/wikipedia/wikipedia_en_top_mini_2026-06.zim"; \
+    echo "${ZIM_TOPMINI_SHA256}  wikipedia_en_top_mini_2026-06.zim" | sha256sum -c -; \
+    curl -fsSL --retry 3 -o wwwnc.cdc.gov_en_all_2024-11.zim \
+      "https://download.kiwix.org/zim/zimit/wwwnc.cdc.gov_en_all_2024-11.zim"; \
+    echo "${ZIM_CDC_SHA256}  wwwnc.cdc.gov_en_all_2024-11.zim" | sha256sum -c -; \
+    curl -fsSL --retry 3 -o zimgit-medicine_en_2024-08.zim \
+      "https://download.kiwix.org/zim/other/zimgit-medicine_en_2024-08.zim"; \
+    echo "${ZIM_MEDICINE_SHA256}  zimgit-medicine_en_2024-08.zim" | sha256sum -c -; \
+    curl -fsSL --retry 3 -o irp.fas.org_en_military-medicine_2026-10.zim \
+      "https://download.kiwix.org/zim/zimit/irp.fas.org_en_military-medicine_2026-10.zim"; \
+    echo "${ZIM_MILITARY_SHA256}  irp.fas.org_en_military-medicine_2026-10.zim" | sha256sum -c -; \
+    curl -fsSL --retry 3 -o nhs.uk_en_medicines_2025-12.zim \
+      "https://download.kiwix.org/zim/zimit/nhs.uk_en_medicines_2025-12.zim"; \
+    echo "${ZIM_NHS_SHA256}  nhs.uk_en_medicines_2025-12.zim" | sha256sum -c -; \
+    curl -fsSL --retry 3 -o ham.stackexchange.com_en_all_2026-10.zim \
+      "https://download.kiwix.org/zim/stack_exchange/ham.stackexchange.com_en_all_2026-10.zim"; \
+    echo "${ZIM_HAM_SHA256}  ham.stackexchange.com_en_all_2026-10.zim" | sha256sum -c -; \
+    mv wikipedia_en_top_mini_2026-06.zim wwwnc.cdc.gov_en_all_2024-11.zim zimgit-medicine_en_2024-08.zim irp.fas.org_en_military-medicine_2026-10.zim nhs.uk_en_medicines_2025-12.zim ham.stackexchange.com_en_all_2026-10.zim /zim/
+# 100-mini comes from the repo (already in the build context, hash-verified).
+COPY install/wikipedia_en_100_mini_2026-01.zim /zim/wikipedia_en_100_mini_2026-01.zim
+RUN echo "2811724b72fd34a0728c28b7456d3d6866579019fbbe7ffe28528f3450c252db  /zim/wikipedia_en_100_mini_2026-01.zim" | sha256sum -c -
+
 # Production stage
 FROM base
 ARG VERSION=dev
@@ -135,3 +181,54 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+
+# --- Image variants (content editions) ---------------------------------------
+# Each variant is the production image plus a baked-in ZIM set in
+# /app/bundled-zim. The entrypoint copies bundled ZIMs into /app/storage/zim
+# on first boot (never overwriting), so a fresh install has offline content
+# with no separate download. /app/storage is a bind mount at runtime, so
+# ZIMs must live in /app/bundled-zim in the image — anything baked into
+# /app/storage would be shadowed by the mount.
+#   lite     — Wikipedia 100-mini only (~4 MB). Smallest pull, low-storage phones.
+#   standard — Wikipedia top-mini + CDC + Medicine (~580 MB). General offline library.
+#   comms    — Wikipedia 100-mini + Ham Radio Q&A (~80 MB). Mesh radio users;
+#              the installer also pre-pulls the Meshtastic/MeshCore images.
+#   full     — Every ZIM above (~740 MB). The complete kit.
+# Build with: docker build --target variant-<name> .
+# The plain :latest image is unchanged (no bundled ZIMs); variants are
+# additive tags (:lite, :standard, :comms, :full).
+
+FROM production AS variant-lite
+ENV NOMAD_VARIANT=lite
+LABEL org.opencontainers.image.variant="lite"
+COPY --from=zim-content /zim/wikipedia_en_100_mini_2026-01.zim /app/bundled-zim/
+
+FROM production AS variant-standard
+ENV NOMAD_VARIANT=standard
+LABEL org.opencontainers.image.variant="standard"
+COPY --from=zim-content /zim/wikipedia_en_top_mini_2026-06.zim /app/bundled-zim/
+COPY --from=zim-content /zim/wwwnc.cdc.gov_en_all_2024-11.zim /app/bundled-zim/
+COPY --from=zim-content /zim/zimgit-medicine_en_2024-08.zim /app/bundled-zim/
+
+FROM production AS variant-comms
+ENV NOMAD_VARIANT=comms
+LABEL org.opencontainers.image.variant="comms"
+COPY --from=zim-content /zim/wikipedia_en_100_mini_2026-01.zim /app/bundled-zim/
+COPY --from=zim-content /zim/ham.stackexchange.com_en_all_2026-10.zim /app/bundled-zim/
+
+FROM production AS variant-full
+ENV NOMAD_VARIANT=full
+LABEL org.opencontainers.image.variant="full"
+COPY --from=zim-content /zim/wikipedia_en_top_mini_2026-06.zim /app/bundled-zim/
+COPY --from=zim-content /zim/wwwnc.cdc.gov_en_all_2024-11.zim /app/bundled-zim/
+COPY --from=zim-content /zim/zimgit-medicine_en_2024-08.zim /app/bundled-zim/
+COPY --from=zim-content /zim/irp.fas.org_en_military-medicine_2026-10.zim /app/bundled-zim/
+COPY --from=zim-content /zim/nhs.uk_en_medicines_2025-12.zim /app/bundled-zim/
+COPY --from=zim-content /zim/wikipedia_en_100_mini_2026-01.zim /app/bundled-zim/
+COPY --from=zim-content /zim/ham.stackexchange.com_en_all_2026-10.zim /app/bundled-zim/
+
+# Default target: the plain production image, exactly as before (no bundled
+# ZIMs). This stage exists so a bare `docker build` (no --target) still
+# produces the same image :latest has always been, and the variant stages
+# above it are only built when explicitly targeted. Variants are additive.
+FROM production AS release

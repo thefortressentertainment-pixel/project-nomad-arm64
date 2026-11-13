@@ -40,6 +40,12 @@ NOMAD_DIR="/opt/project-nomad"
 # which cannot run on ARM. The compose file downloaded below is also
 # rewritten to pull the admin/updater/disk-collector images from the
 # source repo's owner, so a fork pulls its own multi-arch images.
+# NOMAD_VARIANT (default "latest") selects a content edition of the admin
+# image: lite, standard, comms, full, or latest (plain image, no bundled
+# ZIMs). The bootstrap install.sh sets it; running this script directly,
+# pass it in the environment, e.g. NOMAD_VARIANT=full sudo -E bash
+# install_nomad.sh. Only the admin image tag changes; the updater and
+# disk-collector stay on :latest.
 NOMAD_SOURCE_REPO="${NOMAD_SOURCE_REPO:-Crosstalk-Solutions/project-nomad}"
 NOMAD_SOURCE_BRANCH="${NOMAD_SOURCE_BRANCH:-main}"
 MANAGEMENT_COMPOSE_FILE_URL="https://raw.githubusercontent.com/${NOMAD_SOURCE_REPO}/refs/heads/${NOMAD_SOURCE_BRANCH}/install/management_compose.yaml"
@@ -479,6 +485,25 @@ download_management_compose_file() {
     sed -i "s|ghcr.io/crosstalk-solutions/project-nomad|ghcr.io/${source_owner}/${source_repo_name}|g" "$compose_file_path"
   fi
 
+  # ARM64 port (variants): if NOMAD_VARIANT names a content edition other
+  # than "latest", point the admin image at that tag (e.g. :standard). Only
+  # the admin image carries bundled ZIMs; the updater and disk-collector
+  # stay on :latest. This pattern matches the admin image exactly — the
+  # sidecars have -sidecar-updater / -disk-collector suffixes, so their
+  # :latest tags are untouched.
+  local variant="${NOMAD_VARIANT:-latest}"
+  case "$variant" in
+    latest|lite|standard|comms|full) ;;
+    *)
+      echo -e "${RED}#${RESET} Unknown edition '$variant'. Choose one of: latest, lite, standard, comms, full."
+      exit 1
+      ;;
+  esac
+  if [[ "$variant" != "latest" ]]; then
+    echo -e "${YELLOW}#${RESET} Installing the '${variant}' edition (bundled offline content)...\\n"
+    sed -i "s|ghcr.io/${source_owner}/${source_repo_name}:latest|ghcr.io/${source_owner}/${source_repo_name}:${variant}|" "$compose_file_path"
+  fi
+
   local app_key=$(generateRandomPass)
   local db_root_password=$(generateRandomPass)
   local db_user_password=$(generateRandomPass)
@@ -538,6 +563,28 @@ start_management_containers() {
     exit 1
   fi
   echo -e "${GREEN}#${RESET} Management containers started successfully.\\n"
+}
+
+prepull_variant_extras() {
+  # Record the installed edition for later reference (e.g. a future update
+  # script can read it back instead of guessing from the image tag).
+  local variant="${NOMAD_VARIANT:-latest}"
+  echo "$variant" > "${NOMAD_DIR}/.nomad-variant" 2>/dev/null || true
+
+  # Comms edition only: pre-pull the Meshtastic and MeshCore images so they
+  # install instantly from the dashboard instead of downloading on first
+  # use. Best-effort — if a pull fails, the dashboard install still works,
+  # it just downloads then.
+  if [[ "$variant" != "comms" ]]; then
+    return 0
+  fi
+  echo -e "${YELLOW}#${RESET} Comms edition: pre-pulling the Meshtastic and MeshCore images so they install instantly from the dashboard...\\n"
+  if ! sudo docker pull ghcr.io/meshtastic/web:2.7.1; then
+    echo -e "${YELLOW}#${RESET} Warning: could not pre-pull the Meshtastic image (it will download when you install it from the dashboard).\\n"
+  fi
+  if ! sudo docker pull ghcr.io/axistem-dev/meshcore-web:v1.45.0; then
+    echo -e "${YELLOW}#${RESET} Warning: could not pre-pull the MeshCore image (it will download when you install it from the dashboard).\\n"
+  fi
 }
 
 get_local_ip() {
@@ -696,6 +743,7 @@ create_nomad_directory
 download_helper_scripts
 download_management_compose_file
 start_management_containers
+prepull_variant_extras
 verify_gpu_setup
 success_message
 
