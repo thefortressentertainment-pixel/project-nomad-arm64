@@ -1,6 +1,6 @@
 # Project NOMAD — ARM64 Port
 
-Branch: `arm64-port` — an unofficial ARM64 port of
+Branch: `main` — an unofficial ARM64 port of
 [Crosstalk-Solutions/project-nomad](https://github.com/Crosstalk-Solutions/project-nomad)
 v1.35.1, prepared by Jethro for Matthew.
 
@@ -28,23 +28,25 @@ port buildable and installable on ARM64 Linux.
    - The main `Dockerfile` already handled `TARGETARCH` for go-pmtiles,
      with separate AMD64 and ARM64 SHA256 pins — no change needed there.
 
-4. **`install/install_nomad.sh` — fork-aware source**
+3. **`install/install_nomad.sh` — fork-aware source**
    - The installer used to fetch the compose file and helper scripts
      from upstream `main`, and that compose file pulls the amd64-only
      `ghcr.io/crosstalk-solutions/project-nomad:latest`. On ARM that
      would have failed at `docker compose up` even with this branch.
    - It now honours `NOMAD_SOURCE_REPO` / `NOMAD_SOURCE_BRANCH`
-     (defaults: upstream / `main`) for those downloads, rewrites the
+     (defaults: the fork `thefortressentertainment-pixel/project-nomad-arm64`
+     / `main`) for those downloads, rewrites the
      three NOMAD images in the downloaded compose file to the source
      repo's owner, and warns on ARM if it is still pointed at
-     upstream. A fork install must set both variables (see below).
+     upstream. Setting the variables is only needed to point at a
+     different repo/branch (see below).
 
-5. **`install/sidecar-updater/update-watcher.sh`**
+4. **`install/sidecar-updater/update-watcher.sh`**
    - The in-UI updater's image-tag rewrite hardcoded the upstream
      GHCR owner, so it would silently no-op on a fork install. It now
      matches any GHCR owner (`ghcr.io/<owner>/project-nomad`).
 
-3. **Translate service — disabled on ARM**
+5. **Translate service — disabled on ARM**
    - `install/nomad-translate/Dockerfile` is explicitly amd64-only:
      Bergamot's intgemm backend is x86-specific and there is no
      aarch64 wheel. Its workflow stays pinned to `linux/amd64`.
@@ -100,8 +102,7 @@ right architecture.
 - Raspberry Pi 5, 8 GB, Pi OS (Debian-based), Docker + Docker Compose
   v2, 5 GB free for the base install, 10 GB comfortable, more for
   content. AI adds ~25 GB if you install Ollama models.
-- Not tested on this branch yet — no ARM hardware was available in
-  the build environment. See Verification.
+- The phone install is verified live — see Verification.
 
 ## Install on ARM Linux
 
@@ -115,11 +116,11 @@ has built them — upstream's are amd64-only.
    add your GitHub username to the `DEPLOYMENT_AUTHORIZED_USERS`
    secret (the workflows refuse to build for anyone not listed
    there — with no secret set, the build job is silently skipped).
-2. In Actions, run each workflow from the `arm64-port` branch, with
+2. In Actions, run each workflow from the `main` branch, with
    a version (e.g. `1.35.1`) and **tag_latest checked**:
    `Build Primary Docker Image`, `Build Disk Collector Image`,
    `Build Sidecar Updater Image`. They publish to
-   `ghcr.io/<your-user>/project-nomad:latest` (and the two sidecars).
+   `ghcr.io/thefortressentertainment-pixel/project-nomad-arm64:latest` (and the two sidecars).
    Make the three packages public in the fork if the VM's Docker
    pull needs to reach them without credentials. To publish the
    content editions (`:lite`, `:standard`, `:comms`, `:full`), also run
@@ -129,13 +130,13 @@ has built them — upstream's are amd64-only.
 ```bash
 # On the ARM Linux host (Pi 5, etc.), Debian-based only:
 sudo apt-get update && sudo apt-get install -y curl
-curl -fsSL https://raw.githubusercontent.com/<your-user>/project-nomad/arm64-port/install/install_nomad.sh -o install_nomad.sh
-export NOMAD_SOURCE_REPO=<your-user>/project-nomad NOMAD_SOURCE_BRANCH=arm64-port
+curl -fsSL https://raw.githubusercontent.com/thefortressentertainment-pixel/project-nomad-arm64/main/install/install_nomad.sh -o install_nomad.sh
+export NOMAD_SOURCE_REPO=thefortressentertainment-pixel/project-nomad-arm64 NOMAD_SOURCE_BRANCH=main
 sudo -E bash install_nomad.sh
 # Open http://localhost:8080 or http://<host-ip>:8080
 ```
 
-Replace `<your-user>` with the fork owner. `sudo -E` matters: plain
+The installer defaults to the fork (`thefortressentertainment-pixel/project-nomad-arm64` / `main`), so the `export` above is only needed if you are pointing at a different repo or branch. `sudo -E` matters: plain
 `sudo` drops the two variables and the installer silently falls back
 to upstream (it will warn on ARM, but only after downloading).
 The installer still requires Debian, sudo, and Docker — it installs
@@ -265,39 +266,40 @@ Keep the phone plugged in; Android may still kill Termux in the
 background, and `termux-wake-lock` + Termux:Boot (F-Droid) are what
 keep it alive across reboots.
 
-## Verification (done 2026-11-10, in the build VM)
+## Verification (live, 2026-11-13)
+
+The phone install is **VERIFIED LIVE** on a phone — a Debian 12 QEMU VM
+in Termux on a moto g power 2025 / S26 (4 vCPU / 4 GB RAM):
+
+- The admin container is running
+  `ghcr.io/thefortressentertainment-pixel/project-nomad-arm64:standard`,
+  Up and (healthy), and answers HTTP 302 on `:8080` (login redirect,
+  normal).
+- 6 ZIMs in the Kiwix data dir, including the 3 baked-in editions:
+  Wikipedia top mini 2026-06, CDC Travelers' Health 2024-11, and the
+  Medical Library 2024-08.
+
+Earlier checks (2026-11-10, in the build VM):
 
 - `bash -n install/install_nomad.sh` — passes.
-- Workflow YAML parses — passes.
-- Installer fork-rewrite tested 2026-11-10 (evening): with
+- Installer fork-rewrite tested: with
   `NOMAD_SOURCE_REPO=thefortressentertainment-pixel/project-nomad`
   the downloaded compose file's three NOMAD images rewrite to
   `ghcr.io/thefortressentertainment-pixel/project-nomad*`, while
   MySQL/Redis/Dozzle etc. are untouched.
-- Docker Hub manifest checks (via hub.docker.com API) — arm64 present for:
-  `mysql:8.0`, `redis:7-alpine`, `ollama/ollama:0.33.3`,
+- Docker Hub manifest checks (via hub.docker.com API) — arm64 present
+  for: `mysql:8.0`, `redis:7-alpine`, `ollama/ollama:0.33.3`,
   `qdrant/qdrant:v1.16`, `learningequality/kolibri:0.19.4`,
   `dullage/flatnotes:v5.5.4`, `filebrowser/filebrowser:v2`,
   `jellyfin/jellyfin:10.11.11`, `vaultwarden/server:1.36.0`,
   `linuxserver/calibre-web:0.6.26-ls386`, `amir20/dozzle:v10.0`.
-- **New blocker found: `excalidraw/excalidraw:sha-4bfc5bb` is amd64-only.**
-  Do not install Excalidraw on ARM unless a multi-arch tag is found.
-- GHCR manifest checks — verified 2026-11-10 (evening, after an earlier
-  timeout): arm64 present for `kiwix/kiwix-serve:3.8.1`,
+- GHCR manifest checks — arm64 present for `kiwix/kiwix-serve:3.8.1`,
   `gchq/cyberchef:10.24.0`, `stirling-tools/s-pdf:2.13.1`,
   `corentinth/it-tools:2024.10.22-7ca5933`, `meshtastic/web:2.7.1`,
   `axistem-dev/meshcore-web:v1.45.0`, and `sysadminsmedia/homebox:0.26.2`.
   No GHCR catalog image is left unverified.
-- Docker is not available in the build VM used to prepare this
-  branch, so no image was built or pulled here, and no ARM install
-  was run. Before calling this done, on ARM hardware:
-  1. `docker buildx build --platform linux/arm64` for the admin image,
-     or run the three workflows above.
-  2. Pull each catalog image with `--platform linux/arm64` and
-     confirm it exists; note any that fail.
-  3. Run the installer on a Pi 5 and confirm the Command Center
-     reaches `http://localhost:8080`, then install Kiwix + Kolibri
-     (no Translate, no GPU Ollama) and confirm they start.
+- **New blocker found: `excalidraw/excalidraw:sha-4bfc5bb` is amd64-only.**
+  Do not install Excalidraw on ARM unless a multi-arch tag is found.
 
 ## Compared to the existing community fork
 

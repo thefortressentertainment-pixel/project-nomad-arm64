@@ -18,6 +18,8 @@ No internet required after install. Wikipedia, medical references, Khan Academy 
 
 This is a reverse-engineered ARM64 port of [Crosstalk-Solutions/project-nomad](https://github.com/Crosstalk-Solutions/project-nomad) v1.35.1, which officially supports x86-64 only. Everything below is about this ARM64 version.
 
+> **Built with agentic AI:** This port was created with the help of agentic AI (an AI coding assistant working alongside the maintainer). The code, docs, and release notes were produced collaboratively by a human and an AI agent.
+
 ## Install — the easy way
 
 You do not need to know GitHub, and you do not need to know how to code. You just need to be able to copy and paste one command.

@@ -31,22 +31,24 @@ GREEN='\033[1;32m' # Light Green.
 WHIPTAIL_TITLE="Project NOMAD Installation"
 NOMAD_DIR="/opt/project-nomad"
 # ARM64 port: where the installer fetches the compose file and helper
-# scripts from. Defaults to upstream/main, so an unmodified install is
-# unchanged. A fork install MUST point these at the fork/branch, e.g.
-#   NOMAD_SOURCE_REPO=thefortressentertainment-pixel/project-nomad \
-#   NOMAD_SOURCE_BRANCH=arm64-port sudo -E bash install_nomad.sh
-# Otherwise the compose file comes from upstream main and pulls the
-# amd64-only ghcr.io/crosstalk-solutions/project-nomad:latest image,
-# which cannot run on ARM. The compose file downloaded below is also
-# rewritten to pull the admin/updater/disk-collector images from the
-# source repo's owner, so a fork pulls its own multi-arch images.
+# scripts from. Defaults to the fork/main, so an unmodified install pulls
+# the fork's multi-arch images. Point these at a different repo/branch
+# only if you need to, e.g.
+#   NOMAD_SOURCE_REPO=someone/project-nomad-arm64 \
+#   NOMAD_SOURCE_BRANCH=main sudo -E bash install_nomad.sh
+# If pointed at upstream main instead, the compose file comes from
+# upstream and pulls the amd64-only
+# ghcr.io/crosstalk-solutions/project-nomad:latest image, which cannot
+# run on ARM. The compose file downloaded below is also rewritten to pull
+# the admin/updater/disk-collector images from the source repo's owner,
+# so a fork pulls its own multi-arch images.
 # NOMAD_VARIANT (default "latest") selects a content edition of the admin
 # image: lite, standard, comms, full, or latest (plain image, no bundled
 # ZIMs). The bootstrap install.sh sets it; running this script directly,
 # pass it in the environment, e.g. NOMAD_VARIANT=full sudo -E bash
 # install_nomad.sh. Only the admin image tag changes; the updater and
 # disk-collector stay on :latest.
-NOMAD_SOURCE_REPO="${NOMAD_SOURCE_REPO:-Crosstalk-Solutions/project-nomad}"
+NOMAD_SOURCE_REPO="${NOMAD_SOURCE_REPO:-thefortressentertainment-pixel/project-nomad-arm64}"
 NOMAD_SOURCE_BRANCH="${NOMAD_SOURCE_BRANCH:-main}"
 MANAGEMENT_COMPOSE_FILE_URL="https://raw.githubusercontent.com/${NOMAD_SOURCE_REPO}/refs/heads/${NOMAD_SOURCE_BRANCH}/install/management_compose.yaml"
 START_SCRIPT_URL="https://raw.githubusercontent.com/${NOMAD_SOURCE_REPO}/refs/heads/${NOMAD_SOURCE_BRANCH}/install/start_nomad.sh"
@@ -135,7 +137,7 @@ check_architecture() {
     echo -e "${GREEN}#${RESET} Architecture check passed (${arch} / ARM64 port).\\n"
     echo -e "${YELLOW}#${RESET} ARM64: CPU-only AI, no NVIDIA GPU, Translate service disabled.\\n"
     if [[ "${NOMAD_SOURCE_REPO,,}" == "crosstalk-solutions/project-nomad" ]]; then
-      echo -e "${YELLOW}#${RESET} WARNING: installing from upstream ${NOMAD_SOURCE_REPO} will pull amd64-only images. Set NOMAD_SOURCE_REPO to your fork and NOMAD_SOURCE_BRANCH to arm64-port (see README-ARM.md).\\n"
+      echo -e "${YELLOW}#${RESET} WARNING: installing from upstream ${NOMAD_SOURCE_REPO} will pull amd64-only images. Set NOMAD_SOURCE_REPO to the fork thefortressentertainment-pixel/project-nomad-arm64 and NOMAD_SOURCE_BRANCH to main (see README-ARM.md).\\n"
     fi
     return 0
   fi
