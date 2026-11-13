@@ -85,7 +85,7 @@ COPY install/wikipedia_en_100_mini_2026-01.zim /zim/wikipedia_en_100_mini_2026-0
 RUN echo "2811724b72fd34a0728c28b7456d3d6866579019fbbe7ffe28528f3450c252db  /zim/wikipedia_en_100_mini_2026-01.zim" | sha256sum -c -
 
 # Production stage
-FROM base
+FROM base AS production
 ARG VERSION=dev
 ARG BUILD_DATE
 ARG VCS_REF
