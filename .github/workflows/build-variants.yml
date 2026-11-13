@@ -1,0 +1,114 @@
+name: Build Variant Docker Images
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Semantic version to label the variant images under (no "v" prefix, e.g. "1.2.3")'
+        required: true
+        type: string
+
+# Content editions of the primary image, with offline ZIM content baked in.
+# Each variant is built from the same Dockerfile with --target variant-<name>
+# and pushed as :<name> and :<version>-<name>:
+#   lite     — Wikipedia 100-mini only (~4 MB content)
+#   standard — Wikipedia top-mini + CDC + Medicine (~580 MB)
+#   comms    — Wikipedia 100-mini + Ham Radio Q&A (~80 MB)
+#   full     — Every bundled ZIM (~740 MB)
+# The plain :latest image is untouched by this workflow; variants are
+# additive. The four builds run sequentially in one job so the production
+# stage (npm build) is compiled once and reused from the build cache.
+# ZIM download URLs and SHA256 pins live in the Dockerfile (zim-content
+# stage) — this workflow passes no ZIM build-args.
+
+jobs:
+  check_authorization:
+    name: Check authorization to publish new Docker image
+    runs-on: ubuntu-latest
+    outputs:
+      isAuthorized: ${{ steps.check-auth.outputs.is_authorized }}
+    steps:
+      - name: check-auth
+        id: check-auth
+        run: echo "is_authorized=${{ contains(secrets.DEPLOYMENT_AUTHORIZED_USERS, github.triggering_actor) }}" >> $GITHUB_OUTPUT
+  build-variants:
+    name: Build variant images
+    needs: check_authorization
+    if: needs.check_authorization.outputs.isAuthorized == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+      - name: Restore binary assets
+        run: sh binary-blocks/restore-binaries.sh
+      - name: Verify binary assets
+        run: ls -la install/calibre-empty-library/ && sha256sum install/calibre-empty-library/metadata.db
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push lite
+        uses: docker/build-push-action@v7
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          target: variant-lite
+          tags: |
+            ghcr.io/${{ github.repository }}:lite
+            ghcr.io/${{ github.repository }}:${{ inputs.version }}-lite
+          build-args: |
+            VERSION=${{ inputs.version }}
+            BUILD_DATE=${{ github.event.workflow_run.created_at }}
+            VCS_REF=${{ github.sha }}
+            CREATOR_PACKS_APP_KEY=${{ secrets.CREATOR_PACKS_APP_KEY }}
+      - name: Build and push standard
+        uses: docker/build-push-action@v7
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          target: variant-standard
+          tags: |
+            ghcr.io/${{ github.repository }}:standard
+            ghcr.io/${{ github.repository }}:${{ inputs.version }}-standard
+          build-args: |
+            VERSION=${{ inputs.version }}
+            BUILD_DATE=${{ github.event.workflow_run.created_at }}
+            VCS_REF=${{ github.sha }}
+            CREATOR_PACKS_APP_KEY=${{ secrets.CREATOR_PACKS_APP_KEY }}
+      - name: Build and push comms
+        uses: docker/build-push-action@v7
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          target: variant-comms
+          tags: |
+            ghcr.io/${{ github.repository }}:comms
+            ghcr.io/${{ github.repository }}:${{ inputs.version }}-comms
+          build-args: |
+            VERSION=${{ inputs.version }}
+            BUILD_DATE=${{ github.event.workflow_run.created_at }}
+            VCS_REF=${{ github.sha }}
+            CREATOR_PACKS_APP_KEY=${{ secrets.CREATOR_PACKS_APP_KEY }}
+      - name: Build and push full
+        uses: docker/build-push-action@v7
+        with:
+          platforms: linux/amd64,linux/arm64
+          push: true
+          target: variant-full
+          tags: |
+            ghcr.io/${{ github.repository }}:full
+            ghcr.io/${{ github.repository }}:${{ inputs.version }}-full
+          build-args: |
+            VERSION=${{ inputs.version }}
+            BUILD_DATE=${{ github.event.workflow_run.created_at }}
+            VCS_REF=${{ github.sha }}
+            CREATOR_PACKS_APP_KEY=${{ secrets.CREATOR_PACKS_APP_KEY }}
