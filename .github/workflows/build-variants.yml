@@ -59,6 +59,7 @@ jobs:
       - name: Build and push lite
         uses: docker/build-push-action@v7
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           target: variant-lite
@@ -73,6 +74,7 @@ jobs:
       - name: Build and push standard
         uses: docker/build-push-action@v7
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           target: variant-standard
@@ -87,6 +89,7 @@ jobs:
       - name: Build and push comms
         uses: docker/build-push-action@v7
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           target: variant-comms
@@ -101,6 +104,7 @@ jobs:
       - name: Build and push full
         uses: docker/build-push-action@v7
         with:
+          context: .
           platforms: linux/amd64,linux/arm64
           push: true
           target: variant-full
